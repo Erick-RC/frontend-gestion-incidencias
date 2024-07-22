@@ -9,10 +9,16 @@ export const useAuth = () => {
   const login = async ({ email, password }) => {
     try {
       const response = await api.post('/api/usuarios/login', { email, password });
-      const { token } = response.data;
+      const { token, tipo } = response.data;
       setToken(token);
       localStorage.setItem('token', token);
-      setLocation('/dashboard'); // Redirige al dashboard
+
+      // Redirige según el tipo de usuario
+      if (tipo === 'residente') {
+        setLocation('/crear-incidencia'); // Cambia esta ruta si es diferente
+      } else if (tipo === 'administrador') {
+        setLocation('/dashboard');
+      }
     } catch (error) {
       console.error('Error en el login:', error.response ? error.response.data : error.message);
     }

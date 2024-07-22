@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage'; // Asegúrate de tener esta página
+import CreateIncidentPage from './pages/CreateIncidentPage'; // Asegúrate de tener esta página
 
 function App() {
   return (
@@ -13,7 +14,8 @@ function App() {
         <Route path="/" component={HomePage} />
         <Route path="/login" component={LoginPage} />
         <Route path="/register" component={RegisterPage} />
-        <Route path="/dashboard" component={DashboardPage} /> {/* Agrega la ruta del dashboard */}
+        <Route path="/dashboard" component={DashboardPage} />
+        <Route path="/crear-incidencia" component={CreateIncidentPage} /> {/* Agrega la ruta para crear incidencias */}
       </Switch>
     </AuthProvider>
   );
