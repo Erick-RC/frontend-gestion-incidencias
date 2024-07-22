@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { LoginFooter } from '../components/LoginFooter';
+import { Footer } from '../components/Footer';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -76,7 +76,7 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-      <LoginFooter />
+      <Footer />
     </div>
   );
 };

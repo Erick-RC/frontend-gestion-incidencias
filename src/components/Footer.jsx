@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const LoginFooter = () => {
+export const Footer = () => {
     return (
         <footer className="bg-gradient-to-r from-gray-800 to-gray-600 text-white py-16 mt-auto">
             <div className="container mx-auto px-4">
