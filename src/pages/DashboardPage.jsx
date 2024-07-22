@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 import { Footer } from '../components/Footer';
 
@@ -9,39 +9,51 @@ const Dashboard = () => {
   const [imagenes, setImagenes] = useState({});
   const [error, setError] = useState(null);
   const [changedIncidencias, setChangedIncidencias] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [newComments, setNewComments] = useState({});
 
-  const fetchIncidencias = async () => {
+  const fetchIncidencias = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await api.get('/api/incidencias');
       setIncidencias(response.data);
+      setError(null);
     } catch (error) {
+      console.error('Error al obtener incidencias:', error);
       setError('Error al obtener las incidencias. Por favor, intente de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchComentarios = async (incidenciaId) => {
-    if (comentarios[incidenciaId]) return; // No fetch if already loaded
+  const fetchComentarios = useCallback(async (incidenciaId) => {
+    if (comentarios[incidenciaId]) return;
+    setIsLoading(true);
     try {
       const response = await api.get(`/api/comentarios/${incidenciaId}`);
       setComentarios(prev => ({ ...prev, [incidenciaId]: response.data }));
+      setError(null);
     } catch (error) {
+      console.error('Error al obtener comentarios:', error);
       setError('Error al obtener los comentarios. Por favor, intente de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [comentarios]);
 
-  const handleUpdateStatus = (id, estado) => {
+  const handleUpdateStatus = useCallback((id, estado) => {
     setChangedIncidencias(prev => ({ ...prev, [id]: estado }));
-  };
+  }, []);
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = useCallback(async () => {
+    setIsLoading(true);
     try {
       const promises = Object.entries(changedIncidencias).map(([id, estado]) => {
         const incidencia = incidencias.find(inc => inc.ID.toString() === id);
-        console.log('Updating Incidencia:', { id, estado, incidencia });
         return api.put(`/api/incidencias/${id}`, {
           asunto: incidencia.Asunto,
           tipo: incidencia.Tipo,
-          descripcion: incidencia.Descripción, // Asegúrate de usar "Descripción" aquí
+          descripcion: incidencia.Descripción,
           estado: estado
         });
       });
@@ -52,46 +64,73 @@ const Dashboard = () => {
       setChangedIncidencias({});
       setError(null);
     } catch (error) {
+      console.error('Error al guardar cambios:', error);
       setError('Error al guardar los cambios. Por favor, intente de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [changedIncidencias, incidencias]);
 
-  const handleAddComment = async (incidenciaId) => {
+  const handleCommentChange = useCallback((incidenciaId, value) => {
+    setNewComments(prev => ({
+      ...prev,
+      [incidenciaId]: value
+    }));
+  }, []);
+
+  const handleAddComment = useCallback(async (incidenciaId, event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    const comentario = newComments[incidenciaId];
+    if (!comentario || !comentario.trim()) {
+      setIsLoading(false);
+      return;
+    }
     try {
-      const contenido = comentarios[incidenciaId]?.newComment || '';
-      if (!contenido.trim()) return;
-      await api.post('/api/comentarios', { incidenciaId, contenido });
-      fetchComentarios(incidenciaId);
+      await api.post('/api/comentarios', { incidenciaId, contenido: comentario });
+      const response = await api.get(`/api/comentarios/${incidenciaId}`);
       setComentarios(prev => ({
         ...prev,
-        [incidenciaId]: { ...prev[incidenciaId], newComment: '' }
+        [incidenciaId]: response.data
+      }));
+      setNewComments(prev => ({
+        ...prev,
+        [incidenciaId]: ''
       }));
       setError(null);
     } catch (error) {
+      console.error('Error al añadir comentario:', error);
       setError('Error al añadir comentario. Por favor, intente de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [newComments]);
 
-  const handleSelectIncidencia = async (id) => {
+  const handleSelectIncidencia = useCallback(async (id) => {
     if (selectedIncidenciaId === id) {
       setSelectedIncidenciaId(null);
     } else {
       setSelectedIncidenciaId(id);
       if (!imagenes[id]) {
+        setIsLoading(true);
         try {
           const response = await api.get(`/api/imagenes/${id}`);
           setImagenes(prev => ({ ...prev, [id]: response.data }));
+          setError(null);
         } catch (error) {
+          console.error('Error al obtener imágenes:', error);
           setError('Error al obtener las imágenes. Por favor, intente de nuevo.');
+        } finally {
+          setIsLoading(false);
         }
       }
       fetchComentarios(id);
     }
-  };
+  }, [selectedIncidenciaId, imagenes, fetchComentarios]);
 
   useEffect(() => {
     fetchIncidencias();
-  }, []);
+  }, [fetchIncidencias]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -103,7 +142,9 @@ const Dashboard = () => {
             <div className="bg-white rounded-lg shadow-xl overflow-hidden">
               <div className="px-10 py-8">
                 <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Dashboard de Incidencias</h1>
+                <p className="text-xl text-center font-semibold text-gray-700 mb-4">Reportes recientes de incidencias</p>
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{error}</div>}
+                {isLoading && <div className="text-center">Cargando...</div>}
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">Incidencias</h2>
@@ -148,27 +189,22 @@ const Dashboard = () => {
                                     </div>
                                   ))}
                                 </div>
-                                <div className="mt-4 flex items-center space-x-2">
+                                <form onSubmit={(e) => handleAddComment(incidencia.ID, e)} className="mt-4 flex items-center space-x-2">
                                   <input
                                     type="text"
-                                    value={comentarios[incidencia.ID]?.newComment || ''}
-                                    onChange={(e) => setComentarios(prev => ({ 
-                                      ...prev, 
-                                      [incidencia.ID]: { 
-                                        ...(prev[incidencia.ID] || {}), 
-                                        newComment: e.target.value 
-                                      } 
-                                    }))}
+                                    value={newComments[incidencia.ID] || ''}
+                                    onChange={(e) => handleCommentChange(incidencia.ID, e.target.value)}
                                     placeholder="Añadir comentario"
                                     className="flex-grow px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   />
                                   <button
-                                    onClick={() => handleAddComment(incidencia.ID)}
+                                    type="submit"
                                     className="px-4 py-2 bg-windhamBlue text-white rounded-lg hover:bg-green-700 transition duration-300"
+                                    disabled={isLoading}
                                   >
                                     Añadir Comentario
                                   </button>
-                                </div>
+                                </form>
                               </div>
                             </div>
                           )}
@@ -182,6 +218,7 @@ const Dashboard = () => {
                     <button
                       onClick={handleSaveChanges}
                       className="w-full px-4 py-2 bg-windhamBlue text-white rounded-lg hover:bg-green-700 transition duration-300"
+                      disabled={isLoading}
                     >
                       Guardar Cambios
                     </button>
