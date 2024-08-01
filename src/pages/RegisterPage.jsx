@@ -6,17 +6,32 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tipo, setTipo] = useState('residente');
+  const [error, setError] = useState('');
   const { register } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    register({ nombre, email, password, tipo });
+    
+    // Validar tipo de usuario
+    const tiposValidos = ['residente', 'administrador'];
+    if (!tiposValidos.includes(tipo)) {
+      setError('Tipo de usuario no válido.');
+      return;
+    }
+
+    try {
+      await register({ nombre, email, password, tipo });
+    } catch (err) {
+      console.error('Error en el registro:', err);
+      setError('Error al registrar el usuario.');
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg rounded-lg">
         <h3 className="text-2xl font-bold text-center text-gray-800">Registro de Usuario</h3>
+        {error && <p className="text-red-500 text-center">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
             <div>
