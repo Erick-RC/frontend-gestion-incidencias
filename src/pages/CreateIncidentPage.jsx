@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api'; // Asegúrate de que la ruta sea correcta
 import { useLocation } from 'wouter';
 
@@ -6,8 +6,27 @@ const CreateIncidentPage = () => {
   const [asunto, setAsunto] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [estado, setEstado] = useState('pendiente'); // Valor por defecto para el estado
-  const [, setLocation] = useLocation(); // Usamos setLocation para redirigir después de crear la incidencia
+  const [incidencias, setIncidencias] = useState([]);
+  const [, setLocation] = useLocation(); 
+
+  useEffect(() => {
+    const fetchIncidencias = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No estás autenticado');
+        }
+        const response = await api.get('/api/incidencias', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIncidencias(response.data);
+      } catch (error) {
+        console.error('Error al obtener incidencias:', error.response ? error.response.data : error.message);
+      }
+    };
+
+    fetchIncidencias();
+  }, []); // Dependencia vacía para que se ejecute solo al montar el componente
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,9 +35,12 @@ const CreateIncidentPage = () => {
       if (!token) {
         throw new Error('No estás autenticado');
       }
-      await api.post('/api/incidencias', { asunto, tipo, descripcion, estado }, {
+      await api.post('/api/incidencias', { asunto, tipo, descripcion, estado: 'pendiente' }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      setAsunto('');
+      setTipo('');
+      setDescripcion('');
       setLocation('/dashboard'); // Redirige al dashboard después de crear la incidencia
     } catch (error) {
       console.error('Error al crear la incidencia:', error.response ? error.response.data : error.message);
@@ -71,18 +93,6 @@ const CreateIncidentPage = () => {
               ></textarea>
             </div>
             <div>
-              <label htmlFor="estado" className="block text-sm font-semibold text-gray-700 mb-2">
-                Estado
-              </label>
-              <input
-                type="text"
-                id="estado"
-                value={estado}
-                readOnly // Campo de solo lectura, ya que el valor es fijo
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200"
-              />
-            </div>
-            <div>
               <button
                 type="submit"
                 className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -91,6 +101,19 @@ const CreateIncidentPage = () => {
               </button>
             </div>
           </form>
+          <div className="mt-8">
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Incidencias Creadas</h3>
+            <ul className="space-y-4">
+              {incidencias.map((incidencia) => (
+                <li key={incidencia.ID} className="p-4 border border-gray-300 rounded-md">
+                  <h4 className="text-lg font-semibold text-gray-800">{incidencia.Asunto}</h4>
+                  <p className="text-sm text-gray-600"><strong>Tipo:</strong> {incidencia.Tipo}</p>
+                  <p className="text-sm text-gray-600"><strong>Descripción:</strong> {incidencia.Descripcion}</p>
+                  <p className="text-sm text-gray-600"><strong>Estado:</strong> {incidencia.Estado}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

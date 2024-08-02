@@ -4,18 +4,24 @@ import api from '../services/api'; // Asegúrate de que la ruta sea correcta
 
 export const useAuth = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [, setLocation] = useLocation(); // Usamos setLocation para cambiar la ubicación
+  const [userType, setUserType] = useState(localStorage.getItem('userType') || '');
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
+  const [, setLocation] = useLocation(); 
 
   const login = async ({ email, password }) => {
     try {
       const response = await api.post('/api/usuarios/login', { email, password });
-      const { token, tipo } = response.data;
+      const { token, tipo, id } = response.data;
       setToken(token);
+      setUserType(tipo);
+      setUserId(id);
       localStorage.setItem('token', token);
+      localStorage.setItem('userType', tipo);
+      localStorage.setItem('userId', id);
 
       // Redirige según el tipo de usuario
       if (tipo === 'residente') {
-        setLocation('/crear-incidencia'); // Cambia esta ruta si es diferente
+        setLocation('/crear-incidencia');
       } else if (tipo === 'administrador') {
         setLocation('/dashboard');
       }
@@ -24,5 +30,5 @@ export const useAuth = () => {
     }
   };
 
-  return { token, login };
+  return { token, userType, userId, login };
 };
