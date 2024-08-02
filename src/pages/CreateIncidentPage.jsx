@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; // Asegúrate de que la ruta sea correcta
-import { useLocation } from 'wouter';
 
 const CreateIncidentPage = () => {
   const [asunto, setAsunto] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [incidencias, setIncidencias] = useState([]);
-  const [, setLocation] = useLocation(); 
+  const [comentarios, setComentarios] = useState({});
+  const [selectedIncidenciaId, setSelectedIncidenciaId] = useState(null);
 
   useEffect(() => {
     const fetchIncidencias = async () => {
@@ -41,9 +41,27 @@ const CreateIncidentPage = () => {
       setAsunto('');
       setTipo('');
       setDescripcion('');
-      setLocation('/dashboard'); // Redirige al dashboard después de crear la incidencia
+      // Recargar las incidencias después de crear una nueva
+      const response = await api.get('/api/incidencias', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIncidencias(response.data);
     } catch (error) {
       console.error('Error al crear la incidencia:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleSelectIncidencia = async (id) => {
+    if (selectedIncidenciaId === id) {
+      setSelectedIncidenciaId(null);
+    } else {
+      setSelectedIncidenciaId(id);
+      try {
+        const response = await api.get(`/api/comentarios/${id}`);
+        setComentarios(prev => ({ ...prev, [id]: response.data }));
+      } catch (error) {
+        console.error('Error al obtener los comentarios:', error.response ? error.response.data : error.message);
+      }
     }
   };
 
@@ -110,6 +128,24 @@ const CreateIncidentPage = () => {
                   <p className="text-sm text-gray-600"><strong>Tipo:</strong> {incidencia.Tipo}</p>
                   <p className="text-sm text-gray-600"><strong>Descripción:</strong> {incidencia.Descripcion}</p>
                   <p className="text-sm text-gray-600"><strong>Estado:</strong> {incidencia.Estado}</p>
+                  <button
+                    onClick={() => handleSelectIncidencia(incidencia.ID)}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    {selectedIncidenciaId === incidencia.ID ? 'Ocultar Comentarios' : 'Ver Comentarios'}
+                  </button>
+                  {selectedIncidenciaId === incidencia.ID && (
+                    <div className="mt-4">
+                      <h4 className="text-lg font-semibold text-gray-700 mb-2">Comentarios</h4>
+                      <ul className="space-y-2">
+                        {(comentarios[incidencia.ID] || []).map(comment => (
+                          <li key={comment.ID} className="p-2 border border-gray-300 rounded-md">
+                            {comment.Contenido}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
