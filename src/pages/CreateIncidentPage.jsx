@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { Footer } from '../components/Footer';
+import { useLocation } from 'wouter';
 
 const CreateIncidentPage = () => {
-  const { userId, token } = useAuth();
+  const { userId, token, logout } = useAuth();
   const [asunto, setAsunto] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [incidencias, setIncidencias] = useState([]);
   const [comentarios, setComentarios] = useState({});
   const [selectedIncidenciaId, setSelectedIncidenciaId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     fetchIncidencias();
@@ -28,7 +29,18 @@ const CreateIncidentPage = () => {
       const filteredIncidencias = response.data.filter(
         incidencia => incidencia.Usuario_ID === userId
       );
-      setIncidencias(filteredIncidencias);
+
+      const estadoPrioridades = {
+        'pendiente': 1,
+        'en progreso': 2,
+        'resuelto': 3
+      };
+
+      const incidenciasOrdenadas = filteredIncidencias.sort((a, b) => {
+        return estadoPrioridades[a.Estado.toLowerCase()] - estadoPrioridades[b.Estado.toLowerCase()];
+      });
+
+      setIncidencias(incidenciasOrdenadas);
     } catch (error) {
       console.error('Error al obtener incidencias:', error.response ? error.response.data : error.message);
     }
@@ -85,12 +97,26 @@ const CreateIncidentPage = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    setLocation('/login');
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="relative flex-1 bg-cover bg-center bg-fixed" 
         style={{ backgroundImage: "url('https://www.wyndhamhotels.com/content/dam/property-images/en-us/mt/mx/others/culiacan/28019/28019_exterior_view_1a.jpg?crop=5424:3616;*,*&downsize=1800:*')" }}>
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-white">Crear Incidencia</h1>
+            <button 
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="w-full lg:w-1/2 bg-white rounded-lg shadow-xl p-6">
               <h2 className="text-2xl font-bold mb-4 text-gray-800">Llenar reporte de incidencia</h2>
@@ -183,33 +209,6 @@ const CreateIncidentPage = () => {
         </div>
       </div>
       <Footer />
-      {/* Modal para dispositivos móviles */}
-      <button 
-        className="fixed bottom-4 right-4 lg:hidden bg-blue-600 text-white p-3 rounded-full shadow-lg"
-        onClick={() => setShowModal(true)}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      </button>
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-md max-h-full overflow-y-auto">
-            <div className="p-4">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Incidencias Creadas</h3>
-              {/* Lista de incidencias (la misma que en la versión de escritorio) */}
-            </div>
-            <button 
-              className="absolute top-2 right-2 text-gray-600"
-              onClick={() => setShowModal(false)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
