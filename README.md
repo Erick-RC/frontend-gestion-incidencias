@@ -1,5 +1,5 @@
 Proyecto
-![Captura de pantalla (3)](https://github.com/user-attachments/assets/990fb722-02c1-4fb1-a37d-7afc3cea57da)
+![Captura de pantalla (4)](https://github.com/user-attachments/assets/07f8f134-cee3-4ecb-bb3b-e8a330e8bd80)
 
 Este proyecto fue creado utilizando React y Tailwind CSS para proporcionar una experiencia de usuario moderna y responsiva.
 
