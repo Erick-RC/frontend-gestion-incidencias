@@ -1,25 +1,27 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter'; // Asegúrate de tener wouter instalado
-import api from '../services/api'; // Asegúrate de que la ruta sea correcta
+import { useLocation } from 'wouter';
+import api from '../services/api'; 
 
 export const useAuth = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [userType, setUserType] = useState(localStorage.getItem('userType') || '');
-  const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
+  const [userId, setUserId] = useState(Number(localStorage.getItem('userId')) || 0); // Convertir a número
   const [, setLocation] = useLocation(); 
 
   const login = async ({ email, password }) => {
     try {
       const response = await api.post('/api/usuarios/login', { email, password });
       const { token, tipo, id } = response.data;
+  
       setToken(token);
       setUserType(tipo);
       setUserId(id);
+  
       localStorage.setItem('token', token);
       localStorage.setItem('userType', tipo);
       localStorage.setItem('userId', id);
-
-      // Redirige según el tipo de usuario
+  
+      // Redirigir según el tipo de usuario
       if (tipo === 'residente') {
         setLocation('/crear-incidencia');
       } else if (tipo === 'administrador') {

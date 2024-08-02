@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api'; // Asegúrate de que la ruta sea correcta
+import api from '../services/api';
+import { useAuth } from '../hooks/useAuth'; 
 
 const CreateIncidentPage = () => {
+  const { userId, token } = useAuth(); // Obtén userId del hook useAuth
   const [asunto, setAsunto] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -12,40 +14,59 @@ const CreateIncidentPage = () => {
   useEffect(() => {
     const fetchIncidencias = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        if (!token || !userId) {
           throw new Error('No estás autenticado');
         }
+
         const response = await api.get('/api/incidencias', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setIncidencias(response.data);
+
+        // Filtrar incidencias basadas en el userId
+        const filteredIncidencias = response.data.filter(
+          incidencia => incidencia.Usuario_ID === userId
+        );
+
+        setIncidencias(filteredIncidencias);
       } catch (error) {
         console.error('Error al obtener incidencias:', error.response ? error.response.data : error.message);
       }
     };
 
     fetchIncidencias();
-  }, []); // Dependencia vacía para que se ejecute solo al montar el componente
+  }, [token, userId]); // Agregar token y userId como dependencias
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      if (!token || !userId) {
         throw new Error('No estás autenticado');
       }
-      await api.post('/api/incidencias', { asunto, tipo, descripcion, estado: 'pendiente' }, {
+      await api.post('/api/incidencias', { 
+        asunto, 
+        tipo, 
+        descripcion, 
+        estado: 'pendiente',
+        Usuario_ID: userId // Usa userId directamente
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAsunto('');
-      setTipo('');
-      setDescripcion('');
+
       // Recargar las incidencias después de crear una nueva
       const response = await api.get('/api/incidencias', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setIncidencias(response.data);
+
+      // Filtra las incidencias por el ID del usuario
+      const filteredIncidencias = response.data.filter(
+        incidencia => incidencia.Usuario_ID === userId
+      );
+      setIncidencias(filteredIncidencias);
+
+      // Limpiar el formulario
+      setAsunto('');
+      setTipo('');
+      setDescripcion('');
     } catch (error) {
       console.error('Error al crear la incidencia:', error.response ? error.response.data : error.message);
     }
@@ -122,32 +143,36 @@ const CreateIncidentPage = () => {
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-4 text-gray-800">Incidencias Creadas</h3>
             <ul className="space-y-4">
-              {incidencias.map((incidencia) => (
-                <li key={incidencia.ID} className="p-4 border border-gray-300 rounded-md">
-                  <h4 className="text-lg font-semibold text-gray-800">{incidencia.Asunto}</h4>
-                  <p className="text-sm text-gray-600"><strong>Tipo:</strong> {incidencia.Tipo}</p>
-                  <p className="text-sm text-gray-600"><strong>Descripción:</strong> {incidencia.Descripcion}</p>
-                  <p className="text-sm text-gray-600"><strong>Estado:</strong> {incidencia.Estado}</p>
-                  <button
-                    onClick={() => handleSelectIncidencia(incidencia.ID)}
-                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    {selectedIncidenciaId === incidencia.ID ? 'Ocultar Comentarios' : 'Ver Comentarios'}
-                  </button>
-                  {selectedIncidenciaId === incidencia.ID && (
-                    <div className="mt-4">
-                      <h4 className="text-lg font-semibold text-gray-700 mb-2">Comentarios</h4>
-                      <ul className="space-y-2">
-                        {(comentarios[incidencia.ID] || []).map(comment => (
-                          <li key={comment.ID} className="p-2 border border-gray-300 rounded-md">
-                            {comment.Contenido}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </li>
-              ))}
+              {incidencias.length > 0 ? (
+                incidencias.map((incidencia) => (
+                  <li key={incidencia.ID} className="p-4 border border-gray-300 rounded-md">
+                    <h4 className="text-lg font-semibold text-gray-800">{incidencia.Asunto}</h4>
+                    <p className="text-sm text-gray-600"><strong>Tipo:</strong> {incidencia.Tipo}</p>
+                    <p className="text-sm text-gray-600"><strong>Descripción:</strong> {incidencia.Descripcion}</p>
+                    <p className="text-sm text-gray-600"><strong>Estado:</strong> {incidencia.Estado}</p>
+                    <button
+                      onClick={() => handleSelectIncidencia(incidencia.ID)}
+                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      {selectedIncidenciaId === incidencia.ID ? 'Ocultar Comentarios' : 'Ver Comentarios'}
+                    </button>
+                    {selectedIncidenciaId === incidencia.ID && (
+                      <div className="mt-4">
+                        <h4 className="text-lg font-semibold text-gray-700 mb-2">Comentarios</h4>
+                        <ul className="space-y-2">
+                          {(comentarios[incidencia.ID] || []).map(comment => (
+                            <li key={comment.ID} className="p-2 border border-gray-300 rounded-md">
+                              {comment.Contenido}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </li>
+                ))
+              ) : (
+                <p className="text-gray-600">No hay incidencias disponibles.</p>
+              )}
             </ul>
           </div>
         </div>
