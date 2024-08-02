@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Footer } from '../components/Footer';
 import { motion } from 'framer-motion';
-import { FaClipboardList, FaSpinner, FaCheckCircle, FaPlus, FaComments } from 'react-icons/fa';
-
+import { FaClipboardList, FaSpinner, FaCheckCircle, FaPlus, FaComments, FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../hooks/useAuth'; // Asegúrate de importar useAuth
 
 const Dashboard = () => {
+  const { logout } = useAuth(); // Usa el hook useAuth para obtener la función logout
   const [incidencias, setIncidencias] = useState([]);
   const [selectedIncidenciaId, setSelectedIncidenciaId] = useState(null);
   const [comentarios, setComentarios] = useState({});
@@ -246,10 +247,17 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100" style={{ backgroundImage: 'url(/path/to/your/background-image.jpg)', backgroundSize: 'cover', backgroundAttachment: 'fixed' }}>
       <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard de Incidencias</h1>
+          <button
+            onClick={() => logout()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center"
+          >
+            <FaSignOutAlt className="mr-2" />
+            Cerrar Sesión
+          </button>
         </div>
       </header>
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">

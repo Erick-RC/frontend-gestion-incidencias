@@ -7,12 +7,11 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [tipo, setTipo] = useState('residente');
   const [error, setError] = useState('');
-  const { register } = useAuth();
+  const { register } = useAuth(); // Asegúrate de que register está disponible
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validar tipo de usuario
+
     const tiposValidos = ['residente', 'administrador'];
     if (!tiposValidos.includes(tipo)) {
       setError('Tipo de usuario no válido.');

@@ -20,9 +20,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post('/api/usuarios', userData);
-      setToken(response.data.token);
-      setUser(response.data);
-      localStorage.setItem('token', response.data.token);
+      const { token, id } = response.data;
+
+      setToken(token);
+      setUser({ ...userData, id });
+      localStorage.setItem('token', token);
+      localStorage.setItem('userType', userData.tipo);
+      localStorage.setItem('userId', id);
+
       setLocation('/');
     } catch (error) {
       console.error('Error al registrar:', error);
@@ -32,14 +37,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await api.post('/api/usuarios/login', credentials);
-      if (response.data && response.data.token) {
-        setToken(response.data.token);
-        localStorage.setItem('token', response.data.token);
-        setUser({ email: credentials.email }); 
-        setLocation('/');
-      } else {
-        throw new Error('No se recibió un token válido');
-      }
+      const { token, tipo, id } = response.data;
+
+      setToken(token);
+      setUser({ email: credentials.email, tipo, id });
+      localStorage.setItem('token', token);
+      localStorage.setItem('userType', tipo);
+      localStorage.setItem('userId', id);
+
+      setLocation('/');
     } catch (error) {
       console.error('Error al iniciar sesión:', error.response ? error.response.data : error.message);
     }
@@ -49,6 +55,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken('');
     localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userId');
     setLocation('/login');
   };
 

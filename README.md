@@ -1,8 +1,14 @@
-# React + Vite
+Proyecto
+Este proyecto fue creado utilizando React y Tailwind CSS para proporcionar una experiencia de usuario moderna y responsiva.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Acceso a Usuarios
+Para acceder al sistema, puedes usar las siguientes credenciales:
 
-Currently, two official plugins are available:
+Contraseña General: password123
+Acceso como Administrador:
+Correo Electrónico: erick.rabago@example.com
+Acceso como Residente:
+Correo Electrónico: elias.acasia@example.com
+Crear un Nuevo Perfil
+Para crear un nuevo perfil, navega a la ruta /register.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh

@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 import { useLocation } from 'wouter';
 
 const CreateIncidentPage = () => {
-  const { userId, token, logout } = useAuth();
+  const { userId, token, logout } = useAuth(); // Asegúrate de que `logout` esté aquí
   const [asunto, setAsunto] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -98,8 +98,7 @@ const CreateIncidentPage = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    setLocation('/login');
+    logout(); // Llama a la función logout del contexto
   };
 
   return (
@@ -123,7 +122,7 @@ const CreateIncidentPage = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="asunto" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Asunto
+                    Asunto "Describa brevemente el desperfecto."
                   </label>
                   <input
                     type="text"
@@ -136,7 +135,7 @@ const CreateIncidentPage = () => {
                 </div>
                 <div>
                   <label htmlFor="tipo" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tipo
+                    Tipo "Añada el tipo de incidencia por ejemplo, fontaneria, electricidad, etc"
                   </label>
                   <input
                     type="text"
@@ -149,7 +148,7 @@ const CreateIncidentPage = () => {
                 </div>
                 <div>
                   <label htmlFor="descripcion" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Descripción
+                    Descripción "Describa la incidencia, añada su nombre y describa donde se encuentra la incidencia como cuarto o pasillo"
                   </label>
                   <textarea
                     id="descripcion"
